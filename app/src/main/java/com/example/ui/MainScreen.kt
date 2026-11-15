@@ -195,7 +195,7 @@ fun MainScreen(
                         },
                         actions = {
                             Text(
-                                text = "DE • 84.200.69.80",
+                                text = "DE • 1.1.1.1",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = ChampGold,
                                 modifier = Modifier.padding(end = 16.dp)
@@ -361,7 +361,7 @@ fun MainScreen(
                                     onSelectNode = viewModel::selectNode,
                                     onProbeAllNodes = { viewModel.probeAllNodes(initialFast = false) },
                                     onToggleAutoConnectGermany = viewModel::setAutoConnectGermany,
-                                    onToggleSplitTunnelEfootball = viewModel::setSplitTunnelEfootball,
+                                    onToggleBypassEfootballFromVpn = viewModel::setBypassEfootballFromVpn,
                                     onToggleLuckStabilityMode = viewModel::setLuckStabilityMode,
                                     onToggleLanguage = viewModel::setIsArabic
                                 )

@@ -16,24 +16,24 @@ object VpnStateHolder {
     @Volatile
     var userManuallyDisconnected: Boolean = false
 
-    fun setConnecting(node: ServerNode, splitTunnel: Boolean) {
+    fun setConnecting(node: ServerNode, bypassEfootball: Boolean) {
         _telemetry.update {
             it.copy(
                 state = VpnConnectionState.CONNECTING,
                 activeNode = node,
-                isSplitTunnelActive = splitTunnel,
+                isEfootballBypassed = bypassEfootball,
                 errorMessage = null
             )
         }
     }
 
-    fun setConnected(node: ServerNode, splitTunnel: Boolean) {
+    fun setConnected(node: ServerNode, bypassEfootball: Boolean) {
         _telemetry.update {
             it.copy(
                 state = VpnConnectionState.CONNECTED,
                 activeNode = node,
                 connectedSinceEpochMs = System.currentTimeMillis(),
-                isSplitTunnelActive = splitTunnel,
+                isEfootballBypassed = bypassEfootball,
                 errorMessage = null
             )
         }
@@ -58,21 +58,16 @@ object VpnStateHolder {
         }
     }
 
-    fun recordDnsPacket(bytesSent: Int, bytesReceived: Int, rttMs: Int, host: String?) {
-        _telemetry.update { current ->
-            current.copy(
-                dnsQueriesHandled = current.dnsQueriesHandled + 1,
-                bytesOut = current.bytesOut + bytesSent,
-                bytesIn = current.bytesIn + bytesReceived,
-                lastDnsLatencyMs = rttMs,
-                lastResolvedHost = host ?: current.lastResolvedHost
-            )
-        }
-    }
-
     fun updateActiveNode(node: ServerNode) {
-        _telemetry.update {
-            if (it.activeNode.id == node.id) it.copy(activeNode = node) else it
+        _telemetry.update { current ->
+            if (current.activeNode.id == node.id) {
+                current.copy(
+                    activeNode = node,
+                    lastMeasuredLatencyMs = node.measuredPingMs ?: current.lastMeasuredLatencyMs
+                )
+            } else {
+                current
+            }
         }
     }
 

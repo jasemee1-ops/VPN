@@ -26,7 +26,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -156,7 +155,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
                         val germanNodeId = settings.selectedNodeId.ifBlank {
                             GermanServerCatalog.defaultNodes.first().id
                         }
-                        connectToNode(germanNodeId, settings.splitTunnelEfootballOnly)
+                        connectToNode(germanNodeId, settings.bypassEfootballFromVpn)
                     }
                 }
             }
@@ -171,11 +170,11 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         ) {
             disconnect()
         } else {
-            connectToNode(settings.selectedNodeId, settings.splitTunnelEfootballOnly)
+            connectToNode(settings.selectedNodeId, settings.bypassEfootballFromVpn)
         }
     }
 
-    fun connectToNode(nodeId: String, splitTunnel: Boolean) {
+    fun connectToNode(nodeId: String, bypassEfootball: Boolean) {
         val context = getApplication<Application>()
         val prepareIntent = VpnService.prepare(context)
         if (prepareIntent != null) {
@@ -183,7 +182,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             _pendingConsentIntent.value = prepareIntent
         } else {
             _pendingConsentIntent.value = null
-            PesVpnService.startConnection(context, nodeId, splitTunnel)
+            PesVpnService.startConnection(context, nodeId, bypassEfootball)
         }
     }
 
@@ -194,7 +193,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             PesVpnService.startConnection(
                 getApplication(),
                 settings.selectedNodeId,
-                settings.splitTunnelEfootballOnly
+                settings.bypassEfootballFromVpn
             )
         } else {
             VpnStateHolder.setDisconnected()
@@ -212,7 +211,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             VpnStateHolder.resetIfIdle(nodeId)
             val state = VpnStateHolder.telemetry.value.state
             if (state == VpnConnectionState.CONNECTED || state == VpnConnectionState.CONNECTING) {
-                connectToNode(nodeId, uiState.value.settings.splitTunnelEfootballOnly)
+                connectToNode(nodeId, uiState.value.settings.bypassEfootballFromVpn)
             }
         }
     }
@@ -223,9 +222,9 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun setSplitTunnelEfootball(enabled: Boolean) {
+    fun setBypassEfootballFromVpn(enabled: Boolean) {
         viewModelScope.launch {
-            repo.setSplitTunnelEfootballOnly(enabled)
+            repo.setBypassEfootballFromVpn(enabled)
             if (VpnStateHolder.telemetry.value.state == VpnConnectionState.CONNECTED) {
                 connectToNode(uiState.value.settings.selectedNodeId, enabled)
             }
@@ -278,12 +277,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             val selected = _nodes.value.firstOrNull { it.id == settings.selectedNodeId }
                 ?: _nodes.value.first()
 
-            // Connect automatically to Germany if not connected
-            if (VpnStateHolder.telemetry.value.state != VpnConnectionState.CONNECTED) {
-                connectToNode(selected.id, settings.splitTunnelEfootballOnly)
-            }
-
-            // Run a 5-packet burst latency & jitter check to Germany
+            // Run a 5-packet burst latency & jitter check to Germany without forcing DNS hijack
             val result = GermanyPingMonitor.probeNode(selected, attempts = 5)
             _nodes.update { list ->
                 list.map {
@@ -348,7 +342,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun logPackPull(packName: String, tier: PackTier, coinsSpent: Int) {
-        val currentPing = VpnStateHolder.telemetry.value.lastDnsLatencyMs
+        val currentPing = VpnStateHolder.telemetry.value.lastMeasuredLatencyMs
             ?: uiState.value.nodes.firstOrNull { it.id == uiState.value.settings.selectedNodeId }?.measuredPingMs
         viewModelScope.launch {
             repo.addPackPullRecord(
@@ -383,10 +377,6 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun refreshEfootballInstalled() {
-        _isEfootballInstalled.value = checkEfootballInstalled()
-    }
-
     private fun checkEfootballInstalled(): Boolean {
         return try {
             getApplication<Application>().packageManager.getPackageInfo(
@@ -405,9 +395,9 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         settings: AppSettings
     ): LuckMetrics {
         val isConnected = telemetry.state == VpnConnectionState.CONNECTED
-        val tunnelScore = if (isConnected) 35 else 0
+        val tunnelScore = if (isConnected || settings.bypassEfootballFromVpn) 35 else 15
 
-        val ping = telemetry.lastDnsLatencyMs ?: selectedNode.measuredPingMs
+        val ping = telemetry.lastMeasuredLatencyMs ?: selectedNode.measuredPingMs
         val pingScore = when {
             ping == null -> 8
             ping <= 65 -> 25
@@ -426,7 +416,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val windowInfo = GermanyPingMonitor.getFrankfurtWindowInfo()
-        val stabilityBonus = if (settings.luckStabilityMode && isConnected) 5 else 0
+        val stabilityBonus = if (settings.luckStabilityMode && selectedNode.packetLossPercent == 0) 5 else 0
         val total = (tunnelScore + pingScore + jitterScore + windowInfo.score + stabilityBonus)
             .coerceIn(0, 100)
 

@@ -20,9 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.NetworkPing
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsSoccer
@@ -40,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -80,9 +79,10 @@ fun VpnHomeScreen(
         ?: uiState.nodes.first()
     val isConnected = telemetry.state == VpnConnectionState.CONNECTED
 
-    val pingDisplay = (telemetry.lastDnsLatencyMs ?: selectedNode.measuredPingMs)
+    val pingDisplay = (telemetry.lastMeasuredLatencyMs ?: selectedNode.measuredPingMs)
         ?.let { "$it ms" } ?: "-- ms"
     val jitterDisplay = selectedNode.jitterMs?.let { "$it ms" } ?: "-- ms"
+    val lossDisplay = "${selectedNode.packetLossPercent}%"
 
     Column(
         modifier = modifier
@@ -130,9 +130,9 @@ fun VpnHomeScreen(
                 ) {
                     GermanyFlagBadge(
                         label = if (isArabic) {
-                            if (uiState.settings.autoConnectGermany) "ألمانيا تلقائي • DE" else "نود ألمانيا • DE"
+                            if (uiState.settings.bypassEfootballFromVpn) "وضع الأمان • eFootball" else "ألمانيا • DE"
                         } else {
-                            if (uiState.settings.autoConnectGermany) "Auto Germany • DE" else "Germany Node • DE"
+                            if (uiState.settings.bypassEfootballFromVpn) "Safe Mode • eFootball" else "Germany • DE"
                         }
                     )
 
@@ -146,9 +146,9 @@ fun VpnHomeScreen(
                     ) {
                         Text(
                             text = if (isArabic) {
-                                if (isConnected) "النفق نشط" else "جاهز للربط"
+                                if (isConnected) "VPN نشط" else "بدون DNS VPN (آمن)"
                             } else {
-                                if (isConnected) "TUNNEL LIVE" else "STANDBY"
+                                if (isConnected) "VPN LIVE" else "DIRECT (SAFE)"
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isConnected) PitchEmerald else TextSecondary,
@@ -180,7 +180,7 @@ fun VpnHomeScreen(
             }
         }
 
-        // Permission / Auto-Connect Notice if needed
+        // Permission Notice if needed
         AnimatedVisibility(visible = telemetry.state == VpnConnectionState.PERMISSION_REQUIRED) {
             Surface(
                 shape = MaterialTheme.shapes.medium,
@@ -200,9 +200,9 @@ fun VpnHomeScreen(
                     )
                     Text(
                         text = if (isArabic) {
-                            "لتشغيل نفق VPN ألمانيا الحقيقي، اضغط على زر الاتصال ووافق على إذن أندرويد."
+                            "اضغط على زر الاتصال ووافق على إذن أندرويد لتشغيل نفق VPN الآمن."
                         } else {
-                            "Tap Connect and approve the Android VPN prompt to activate the real Germany tunnel."
+                            "Tap Connect and approve the Android VPN prompt to enable the safe VPN tunnel."
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextPrimary
@@ -222,6 +222,44 @@ fun VpnHomeScreen(
                 elapsedFormatted = formatDuration(uiState.elapsedSeconds),
                 onClick = onToggleVpn
             )
+        }
+
+        // Safe eFootball status indicator
+        Surface(
+            shape = MaterialTheme.shapes.small,
+            color = PitchEmeraldContainer.copy(alpha = 0.7f),
+            border = BorderStroke(1.dp, PitchEmerald.copy(alpha = 0.35f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = null,
+                    tint = PitchEmerald,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = if (isArabic) {
+                        if (uiState.settings.bypassEfootballFromVpn) {
+                            "اللعبة مستثناة من تقطيع DNS — اتصال خادم eFootball محمي ومستقر"
+                        } else {
+                            "وضع DNS المباشر غير الحاجز مفعّل (مع احتياطي 1.1.1.1)"
+                        }
+                    } else {
+                        if (uiState.settings.bypassEfootballFromVpn) {
+                            "eFootball DNS bypass active — prevents Konami server disconnect errors"
+                        } else {
+                            "Non-blocking DNS route active (with 1.1.1.1 fast fallback)"
+                        }
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PitchEmerald
+                )
+            }
         }
 
         // Live Real-Time Telemetry Grid (2x2)
@@ -250,8 +288,8 @@ fun VpnHomeScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TelemetryStatTile(
-                title = if (isArabic) "استعلامات DNS" else "DNS Packets",
-                value = "${telemetry.dnsQueriesHandled}",
+                title = if (isArabic) "فقدان الحزم" else "Packet Loss",
+                value = lossDisplay,
                 icon = Icons.Filled.Dns,
                 accentColor = PitchEmerald,
                 modifier = Modifier.weight(1f)
@@ -265,41 +303,7 @@ fun VpnHomeScreen(
             )
         }
 
-        // Live resolved domain strip when tunnel is active
-        if (isConnected && !telemetry.lastResolvedHost.isNullOrBlank()) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = CardSurface,
-                border = BorderStroke(1.dp, PitchEmerald.copy(alpha = 0.3f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Public,
-                        contentDescription = null,
-                        tint = PitchEmerald,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = if (isArabic) {
-                            "آخر توجيه عبر ألمانيا: ${telemetry.lastResolvedHost}"
-                        } else {
-                            "Last routed via DE: ${telemetry.lastResolvedHost}"
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-
-        // Action Buttons Row: Luck Boost Suite + Launch eFootball / Switch Node
+        // Action Buttons Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -403,9 +407,9 @@ fun VpnHomeScreen(
                 )
                 Text(
                     text = if (isArabic) {
-                        "يعمل التطبيق عبر خدمة Android VpnService الحقيقية لتوجيه استعلامات DNS إلى خوادم ألمانيا وتقليل التذبذب. ملاحظة بشفافية: احتمالات البكجات تُحسب من خوادم Konami ولا يمكن لأي VPN تعديل نسبتها البرمجية."
+                        "للعب eFootball بدون أخطاء اتصال: الأفضل إبقاء خيار استثناء اللعبة مفعّلاً (أو اللعب بدون تشغيل VPN على DNS اللعبة)، لأن خوادم Konami تقطع الاتصال عند تأخر DNS على شبكات الهاتف."
                     } else {
-                        "Runs on real Android VpnService to route DNS through German servers and stabilize latency. Transparency: official pack drop odds are calculated server-side by Konami."
+                        "For stable eFootball connections: keeping eFootball VPN bypass enabled (or playing on direct connection) prevents Konami server timeout errors on mobile networks."
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary

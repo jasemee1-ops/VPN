@@ -21,7 +21,7 @@ class PreferencesRepository(private val context: Context) {
     private object Keys {
         val AUTO_CONNECT_GERMANY = booleanPreferencesKey("auto_connect_germany")
         val SELECTED_NODE_ID = stringPreferencesKey("selected_node_id")
-        val SPLIT_TUNNEL_EFOOTBALL = booleanPreferencesKey("split_tunnel_efootball")
+        val BYPASS_EFOOTBALL_VPN = booleanPreferencesKey("bypass_efootball_vpn")
         val LUCK_STABILITY_MODE = booleanPreferencesKey("luck_stability_mode")
         val IS_ARABIC = booleanPreferencesKey("is_arabic")
         val PACK_PULL_HISTORY = stringPreferencesKey("pack_pull_history")
@@ -29,10 +29,10 @@ class PreferencesRepository(private val context: Context) {
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
         AppSettings(
-            autoConnectGermany = prefs[Keys.AUTO_CONNECT_GERMANY] ?: true,
+            autoConnectGermany = prefs[Keys.AUTO_CONNECT_GERMANY] ?: false,
             selectedNodeId = prefs[Keys.SELECTED_NODE_ID]
                 ?: GermanServerCatalog.defaultNodes.first().id,
-            splitTunnelEfootballOnly = prefs[Keys.SPLIT_TUNNEL_EFOOTBALL] ?: false,
+            bypassEfootballFromVpn = prefs[Keys.BYPASS_EFOOTBALL_VPN] ?: true,
             luckStabilityMode = prefs[Keys.LUCK_STABILITY_MODE] ?: true,
             isArabic = prefs[Keys.IS_ARABIC] ?: true
         )
@@ -51,8 +51,8 @@ class PreferencesRepository(private val context: Context) {
         context.dataStore.edit { it[Keys.SELECTED_NODE_ID] = nodeId }
     }
 
-    suspend fun setSplitTunnelEfootballOnly(enabled: Boolean) {
-        context.dataStore.edit { it[Keys.SPLIT_TUNNEL_EFOOTBALL] = enabled }
+    suspend fun setBypassEfootballFromVpn(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.BYPASS_EFOOTBALL_VPN] = enabled }
     }
 
     suspend fun setLuckStabilityMode(enabled: Boolean) {

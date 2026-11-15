@@ -27,7 +27,7 @@ class ExampleRobolectricTest {
         val defaultNode = GermanServerCatalog.defaultNodes.first()
         assertEquals("de-frankfurt-main", defaultNode.id)
         assertTrue(defaultNode.isDefaultGermany)
-        assertEquals("84.200.69.80", defaultNode.primaryDns)
+        assertEquals("1.1.1.1", defaultNode.primaryDns)
     }
 
     @Test

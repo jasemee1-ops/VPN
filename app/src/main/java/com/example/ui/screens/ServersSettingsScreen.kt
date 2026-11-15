@@ -62,7 +62,7 @@ fun ServersSettingsScreen(
     onSelectNode: (String) -> Unit,
     onProbeAllNodes: () -> Unit,
     onToggleAutoConnectGermany: (Boolean) -> Unit,
-    onToggleSplitTunnelEfootball: (Boolean) -> Unit,
+    onToggleBypassEfootballFromVpn: (Boolean) -> Unit,
     onToggleLuckStabilityMode: (Boolean) -> Unit,
     onToggleLanguage: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -143,7 +143,7 @@ fun ServersSettingsScreen(
 
         // Automation & Routing Settings Section
         Text(
-            text = if (isArabic) "إعدادات التشغيل التلقائي والتوجيه" else "Automation & Tunnel Settings",
+            text = if (isArabic) "إعدادات الأمان والتوجيه" else "Safety & Routing Settings",
             style = MaterialTheme.typography.titleLarge,
             color = TextPrimary
         )
@@ -159,37 +159,29 @@ fun ServersSettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 SettingToggleRow(
-                    icon = Icons.Filled.Dns,
-                    title = if (isArabic) "تشغيل ألمانيا تلقائياً عند الفتح" else "Auto-Connect Germany on Launch",
+                    icon = Icons.Filled.SportsSoccer,
+                    title = if (isArabic) "استثناء eFootball من الـ VPN (موصى به)" else "Bypass eFootball from VPN (Recommended)",
                     subtitle = if (isArabic) {
-                        "يتصل فوراً بنود فرانكفورت الألماني بمجرد فتح التطبيق"
+                        "يمنع ظهور خطأ الاتصال بخادم eFootball ويبقي اللعبة على اتصالها الأصلي"
                     } else {
-                        "Automatically engages Frankfurt Germany route on app start"
+                        "Prevents Konami server disconnect errors by keeping game traffic direct"
+                    },
+                    checked = uiState.settings.bypassEfootballFromVpn,
+                    onCheckedChange = onToggleBypassEfootballFromVpn,
+                    testTag = "switch_bypass_efootball"
+                )
+
+                SettingToggleRow(
+                    icon = Icons.Filled.Dns,
+                    title = if (isArabic) "تشغيل نفق ألمانيا تلقائياً عند الفتح" else "Auto-Connect VPN on Launch",
+                    subtitle = if (isArabic) {
+                        "يشغّل الـ VPN تلقائياً عند فتح التطبيق (مغلق افتراضياً لتجنب تقطيع اللعبة)"
+                    } else {
+                        "Automatically starts VPN tunnel on launch (off by default for game stability)"
                     },
                     checked = uiState.settings.autoConnectGermany,
                     onCheckedChange = onToggleAutoConnectGermany,
                     testTag = "switch_auto_connect_germany"
-                )
-
-                SettingToggleRow(
-                    icon = Icons.Filled.SportsSoccer,
-                    title = if (isArabic) "تخصيص النفق لتطبيق eFootball فقط" else "eFootball-Only Split Tunnel",
-                    subtitle = if (isArabic) {
-                        if (uiState.isEfootballInstalled) {
-                            "eFootball مثبّتة — سيتم توجيه اللعبة فقط عبر نفق ألمانيا"
-                        } else {
-                            "تطبيق eFootball غير مثبت حالياً (سيُطبّق التوجيه العام)"
-                        }
-                    } else {
-                        if (uiState.isEfootballInstalled) {
-                            "eFootball detected — routes only game DNS through Germany"
-                        } else {
-                            "eFootball not detected — applies system-wide DNS routing"
-                        }
-                    },
-                    checked = uiState.settings.splitTunnelEfootballOnly,
-                    onCheckedChange = onToggleSplitTunnelEfootball,
-                    testTag = "switch_split_tunnel"
                 )
 
                 SettingToggleRow(

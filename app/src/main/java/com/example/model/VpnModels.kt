@@ -36,12 +36,22 @@ object GermanServerCatalog {
             id = "de-frankfurt-main",
             nameAr = "ألمانيا — فرانكفورت (تلقائي)",
             nameEn = "Germany — Frankfurt (Auto)",
-            cityAr = "فرانكفورت • المسار الأساسي",
-            cityEn = "Frankfurt • Primary Route",
+            cityAr = "فرانكفورت • مسار مستقر",
+            cityEn = "Frankfurt • Stable Route",
+            providerTag = "Cloudflare / DE Edge",
+            primaryDns = "1.1.1.1",
+            secondaryDns = "84.200.69.80",
+            isDefaultGermany = true
+        ),
+        ServerNode(
+            id = "de-dnswatch-frankfurt",
+            nameAr = "ألمانيا — فرانكفورت DNS.Watch",
+            nameEn = "Germany — Frankfurt DNS.Watch",
+            cityAr = "فرانكفورت • خادم ألماني",
+            cityEn = "Frankfurt • German Node",
             providerTag = "DNS.Watch DE",
             primaryDns = "84.200.69.80",
-            secondaryDns = "84.200.70.40",
-            isDefaultGermany = true
+            secondaryDns = "1.1.1.1"
         ),
         ServerNode(
             id = "de-berlin-core",
@@ -51,17 +61,7 @@ object GermanServerCatalog {
             cityEn = "Berlin • Dual Node",
             providerTag = "DNS.Watch DE-2",
             primaryDns = "84.200.70.40",
-            secondaryDns = "84.200.69.80"
-        ),
-        ServerNode(
-            id = "de-frankfurt-privacy",
-            nameAr = "ألمانيا — سيرفر الخصوصية DE",
-            nameEn = "Germany — Privacy Node DE",
-            cityAr = "فرانكفورت • تشفير بدون سجل",
-            cityEn = "Frankfurt • No-Log DNS",
-            providerTag = "Mullvad DE",
-            primaryDns = "194.242.2.2",
-            secondaryDns = "84.200.69.80"
+            secondaryDns = "1.0.0.1"
         ),
         ServerNode(
             id = "de-munich-gaming",
@@ -74,14 +74,14 @@ object GermanServerCatalog {
             secondaryDns = "149.112.112.112"
         ),
         ServerNode(
-            id = "de-dusseldorf-edge",
-            nameAr = "ألمانيا — دوسلدورف فائق السرعة",
-            nameEn = "Germany — Düsseldorf Fast",
-            cityAr = "دوسلدورف • أقل بنق",
-            cityEn = "Düsseldorf • Ultra Edge",
-            providerTag = "Cloudflare EU",
-            primaryDns = "1.1.1.1",
-            secondaryDns = "1.0.0.1"
+            id = "de-frankfurt-privacy",
+            nameAr = "ألمانيا — سيرفر الخصوصية DE",
+            nameEn = "Germany — Privacy Node DE",
+            cityAr = "فرانكفورت • تشفير بدون سجل",
+            cityEn = "Frankfurt • No-Log DNS",
+            providerTag = "Mullvad DE",
+            primaryDns = "194.242.2.2",
+            secondaryDns = "1.1.1.1"
         )
     )
 
@@ -93,12 +93,8 @@ data class VpnTelemetry(
     val state: VpnConnectionState = VpnConnectionState.DISCONNECTED,
     val activeNode: ServerNode = GermanServerCatalog.defaultNodes.first(),
     val connectedSinceEpochMs: Long? = null,
-    val dnsQueriesHandled: Long = 0L,
-    val bytesIn: Long = 0L,
-    val bytesOut: Long = 0L,
-    val lastDnsLatencyMs: Int? = null,
-    val lastResolvedHost: String? = null,
-    val isSplitTunnelActive: Boolean = false,
+    val lastMeasuredLatencyMs: Int? = null,
+    val isEfootballBypassed: Boolean = true,
     val errorMessage: String? = null
 )
 
@@ -126,9 +122,9 @@ data class PackPullRecord(
 )
 
 data class AppSettings(
-    val autoConnectGermany: Boolean = true,
+    val autoConnectGermany: Boolean = false,
     val selectedNodeId: String = GermanServerCatalog.defaultNodes.first().id,
-    val splitTunnelEfootballOnly: Boolean = false,
+    val bypassEfootballFromVpn: Boolean = true,
     val luckStabilityMode: Boolean = true,
     val isArabic: Boolean = true
 )
