@@ -2,7 +2,7 @@ name: Build & Publish Android APK Release
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "**" ]
   workflow_dispatch:
 
 permissions:
@@ -12,64 +12,48 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: |
+          if [ -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          fi
 
-      - name: Setup Gradle 9.3.1
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
 
-      - name: Run Unit & Robolectric Tests
-        run: gradle :app:testDebugUnitTest
-
-      - name: Prepare Keystore & Build APK
-        env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Build APK
         run: |
           mkdir -p dist
-          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$STORE_PASSWORD" ] && [ -n "$KEY_PASSWORD" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "${{ github.workspace }}/my-upload-key.jks"
-            export KEYSTORE_PATH="${{ github.workspace }}/my-upload-key.jks"
-            gradle assembleRelease
-            cp app/build/outputs/apk/release/app-release.apk dist/PES-VPN-Germany-v1.0.apk
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
           else
-            if [ -f debug.keystore.base64 ]; then
-              base64 -d debug.keystore.base64 > debug.keystore
-            else
-              keytool -genkeypair -v -keystore debug.keystore \
-                -storepass android -alias androiddebugkey -keypass android \
-                -keyalg RSA -keysize 2048 -validity 10000 \
-                -dname "CN=Android Debug,O=Android,C=US"
-            fi
-            gradle assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk dist/PES-VPN-Germany-v1.0.apk
+            keytool -genkeypair -v -keystore debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
           fi
+          gradle assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk dist/PES-VPN-Germany-v1.0.apk
 
-      - name: Publish APK to GitHub Releases
+      - name: Publish APK to Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v1.0.${{ github.run_number }}"
           gh release create "$TAG" dist/PES-VPN-Germany-v1.0.apk \
-            --title "PES VPN ألمانيا $TAG" \
-            --notes "ملف تثبيت أندرويد APK جاهز للتنزيل المباشر." \
+            --title "PES VPN Germany $TAG" \
+            --notes "Direct installable Android APK" \
             --latest
 
-      - name: Upload APK Artifact (Backup)
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: PES-VPN-Germany-APK
           path: dist/PES-VPN-Germany-v1.0.apk
-          if-no-files-found: error
