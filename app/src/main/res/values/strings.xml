@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">PES VPN ألمانيا</string>
+    <string name="vpn_notification_channel_name">حالة اتصال VPN ألمانيا</string>
+    <string name="vpn_notification_channel_desc">إشعار مستمر يعرض حالة نفق ألمانيا واستقرار الاتصال</string>
+    <string name="vpn_notification_title">متصل بألمانيا — فرانكفورت</string>
+    <string name="vpn_notification_disconnect">قطع الاتصال</string>
+    <string name="cd_frankfurt_banner">صورة ملعب فرانكفورت الليلي مع شبكة اتصال ألمانيا</string>
+    <string name="cd_luck_crest">شعار مؤشر الحظ واستقرار الاتصال الذهبي</string>
+    <string name="cd_connect_button">زر تشغيل أو إيقاف اتصال VPN ألمانيا</string>
+</resources>

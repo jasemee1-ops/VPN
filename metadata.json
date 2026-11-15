@@ -1,0 +1,6 @@
+{
+  "name": "PES VPN ألمانيا",
+  "description": "تطبيق VPN أندرويد حقيقي لتوجيه DNS إلى ألمانيا تلقائياً مع قياس البنق وأدوات تنظيم الحظ لتفتيح بكجات PES / eFootball.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
