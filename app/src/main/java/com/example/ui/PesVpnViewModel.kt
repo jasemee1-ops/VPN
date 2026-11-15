@@ -1,8 +1,11 @@
 package com.example.ui
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.VpnService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,12 +43,12 @@ data class MainUiState(
     val packHistory: List<PackPullRecord> = emptyList(),
     val elapsedSeconds: Long = 0L,
     val isEfootballInstalled: Boolean = false,
+    val isAnySystemVpnActive: Boolean = false,
     val isProbingAll: Boolean = false,
     val packTimerSecondsRemaining: Int = 25,
     val isPackTimerRunning: Boolean = false,
     val ritualStepsDone: Set<Int> = emptySet(),
-    val pendingVpnConsentIntent: Intent? = null,
-    val autoConnectAttempted: Boolean = false
+    val pendingVpnConsentIntent: Intent? = null
 )
 
 class PesVpnViewModel(application: Application) : AndroidViewModel(application) {
@@ -61,7 +64,7 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
     private val _isPackTimerRunning = MutableStateFlow(false)
     private val _ritualStepsDone = MutableStateFlow<Set<Int>>(emptySet())
     private val _pendingConsentIntent = MutableStateFlow<Intent?>(null)
-    private val _autoConnectAttempted = MutableStateFlow(false)
+    private val _isAnySystemVpnActive = MutableStateFlow(checkAnySystemVpnActive())
     private val _isEfootballInstalled = MutableStateFlow(checkEfootballInstalled())
 
     private var timerJob: Job? = null
@@ -87,12 +90,12 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             packHistory = history,
             elapsedSeconds = elapsed,
             isEfootballInstalled = _isEfootballInstalled.value,
+            isAnySystemVpnActive = _isAnySystemVpnActive.value,
             isProbingAll = _isProbingAll.value,
             packTimerSecondsRemaining = _packTimerSeconds.value,
             isPackTimerRunning = _isPackTimerRunning.value,
             ritualStepsDone = _ritualStepsDone.value,
-            pendingVpnConsentIntent = _pendingConsentIntent.value,
-            autoConnectAttempted = _autoConnectAttempted.value
+            pendingVpnConsentIntent = _pendingConsentIntent.value
         )
     }.combine(_isBoostRunning) { state, boostRunning ->
         state.copy(luckMetrics = state.luckMetrics.copy(isBoostRunning = boostRunning))
@@ -113,8 +116,8 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         state.copy(ritualStepsDone = steps)
     }.combine(_pendingConsentIntent) { state, intent ->
         state.copy(pendingVpnConsentIntent = intent)
-    }.combine(_autoConnectAttempted) { state, attempted ->
-        state.copy(autoConnectAttempted = attempted)
+    }.combine(_isAnySystemVpnActive) { state, anyVpn ->
+        state.copy(isAnySystemVpnActive = anyVpn)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -122,12 +125,11 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
     )
 
     init {
-        startElapsedTicker()
+        startElapsedAndVpnMonitor()
         probeAllNodes(initialFast = true)
-        triggerAutoConnectIfEnabled()
     }
 
-    private fun startElapsedTicker() {
+    private fun startElapsedAndVpnMonitor() {
         viewModelScope.launch {
             while (isActive) {
                 val since = VpnStateHolder.telemetry.value.connectedSinceEpochMs
@@ -138,26 +140,8 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
                 } else {
                     0L
                 }
+                _isAnySystemVpnActive.value = checkAnySystemVpnActive()
                 delay(1000L)
-            }
-        }
-    }
-
-    private fun triggerAutoConnectIfEnabled() {
-        viewModelScope.launch {
-            repo.settingsFlow.collect { settings ->
-                if (!_autoConnectAttempted.value) {
-                    _autoConnectAttempted.value = true
-                    if (settings.autoConnectGermany &&
-                        !VpnStateHolder.userManuallyDisconnected &&
-                        VpnStateHolder.telemetry.value.state == VpnConnectionState.DISCONNECTED
-                    ) {
-                        val germanNodeId = settings.selectedNodeId.ifBlank {
-                            GermanServerCatalog.defaultNodes.first().id
-                        }
-                        connectToNode(germanNodeId, settings.bypassEfootballFromVpn)
-                    }
-                }
             }
         }
     }
@@ -277,7 +261,6 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
             val selected = _nodes.value.firstOrNull { it.id == settings.selectedNodeId }
                 ?: _nodes.value.first()
 
-            // Run a 5-packet burst latency & jitter check to Germany without forcing DNS hijack
             val result = GermanyPingMonitor.probeNode(selected, attempts = 5)
             _nodes.update { list ->
                 list.map {
@@ -389,13 +372,26 @@ class PesVpnViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private fun checkAnySystemVpnActive(): Boolean {
+        return try {
+            val cm = getApplication<Application>()
+                .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                ?: return false
+            val active = cm.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(active) ?: return false
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun computeLuckMetrics(
         telemetry: VpnTelemetry,
         selectedNode: ServerNode,
         settings: AppSettings
     ): LuckMetrics {
         val isConnected = telemetry.state == VpnConnectionState.CONNECTED
-        val tunnelScore = if (isConnected || settings.bypassEfootballFromVpn) 35 else 15
+        val tunnelScore = if (isConnected || settings.bypassEfootballFromVpn) 35 else 20
 
         val ping = telemetry.lastMeasuredLatencyMs ?: selectedNode.measuredPingMs
         val pingScore = when {

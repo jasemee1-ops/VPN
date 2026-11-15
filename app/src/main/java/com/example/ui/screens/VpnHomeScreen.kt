@@ -180,6 +180,37 @@ fun VpnHomeScreen(
             }
         }
 
+        // Warning if ANY system VPN is currently active (eFootball often rejects VPN transport)
+        AnimatedVisibility(visible = uiState.isAnySystemVpnActive) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = ChampGoldContainer,
+                border = BorderStroke(1.dp, ChampGold.copy(alpha = 0.65f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = ChampGold
+                    )
+                    Text(
+                        text = if (isArabic) {
+                            "يوجد VPN نشط على الجهاز حالياً: إذا ظهرت لك رسالة خطأ في خادم eFootball، أوقف الـ VPN ثم افتح اللعبة على الاتصال المباشر."
+                        } else {
+                            "A VPN is currently active on this device: if eFootball shows a server error, turn off VPN and launch the game directly."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextPrimary
+                    )
+                }
+            }
+        }
+
         // Permission Notice if needed
         AnimatedVisibility(visible = telemetry.state == VpnConnectionState.PERMISSION_REQUIRED) {
             Surface(
