@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PES VPN ألمانيا — تحميل التطبيق الرسمي (APK)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070B12;
+      --navy: #0D1522;
+      --card: #121D2F;
+      --elev: #192840;
+      --emerald: #00E676;
+      --emerald-dark: #00A854;
+      --gold: #FFCA28;
+      --red: #EF4444;
+      --text: #F3F7FF;
+      --muted: #9FB0C9;
+      --border: #243550;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top center, #142542 0%, var(--bg) 68%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .shell {
+      max-width: 580px;
+      width: 100%;
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 30px 24px;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: #332707;
+      border: 1px solid rgba(255, 202, 40, 0.45);
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .flag {
+      display: inline-flex;
+      flex-direction: column;
+      width: 18px;
+      height: 12px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .flag span { flex: 1; display: block; }
+    h1 {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+      margin-bottom: 22px;
+    }
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .spec-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 8px;
+    }
+    .spec-box span {
+      display: block;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .spec-box strong {
+      display: block;
+      font-size: 14px;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+      text-align: right;
+    }
+    .feat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 13px;
+      font-size: 13px;
+      color: #E2ECFF;
+      line-height: 1.55;
+    }
+    .feat strong {
+      display: block;
+      color: var(--emerald);
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+    .download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+      color: var(--bg);
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 10px 26px rgba(0, 230, 118, 0.28);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .download-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+    .status-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: right;
+    }
+    .status-note strong {
+      color: var(--gold);
+    }
+    .footer {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 500px) {
+      .features { grid-template-columns: 1fr; }
+      .specs { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="badge">
+      <span class="flag">
+        <span style="background:#111"></span>
+        <span style="background:#EF4444"></span>
+        <span style="background:#FFCA28"></span>
+      </span>
+      اتصال تلقائي • ألمانيا (فرانكفورت)
+    </div>
+
+    <h1>PES VPN ألمانيا</h1>
+    <p class="subtitle">
+      تطبيق Android Native أصلي (Kotlin + Jetpack Compose) يعمل عبر خدمة <strong>VpnService</strong> لتوجيه DNS إلى خوادم ألمانيا تلقائياً مع قياس البنق وتنظيم جلسات التفتيح في eFootball.
+    </p>
+
+    <div class="specs">
+      <div class="spec-box"><span>الصيغة</span><strong>APK مباشر</strong></div>
+      <div class="spec-box"><span>النظام</span><strong>Android 7.0+</strong></div>
+      <div class="spec-box"><span>السيرفر التلقائي</span><strong>فرانكفورت DE</strong></div>
+    </div>
+
+    <div class="features">
+      <div class="feat">
+        <strong>نفق VPN حقيقي</strong>
+        مبني على Android VpnService مع توجيه DNS محمي إلى ألمانيا.
+      </div>
+      <div class="feat">
+        <strong>اتصال تلقائي DE</strong>
+        يرتبط بسيرفر فرانكفورت (84.200.69.80) فور التشغيل.
+      </div>
+      <div class="feat">
+        <strong>بوست الحظ والاستقرار</strong>
+        مؤشر جاهزية لحظي، مؤقت 25 ثانية، وسجل تفتيح البكجات.
+      </div>
+      <div class="feat">
+        <strong>تخصيص eFootball</strong>
+        دعم Split Tunnel لتطبيق اللعبة وقياس بنق جميع السيرفرات.
+      </div>
+    </div>
+
+    <a id="apkDownloadBtn" class="download-btn" href="#" download="PES-VPN-Germany-v1.0.apk">
+      <span>⬇</span>
+      <span>تحميل التطبيق مباشر (APK)</span>
+    </a>
+
+    <div id="statusNote" class="status-note">
+      <strong>تجهيز الرابط:</strong> جارٍ تحديد مصدر التنزيل التلقائي...
+    </div>
+
+    <div class="footer">
+      الإصدار 1.0 • توقيت ألمانيا الآن: <span id="deClock">--:--</span>
+    </div>
+  </main>
+
+  <script>
+    const apkBtn = document.getElementById("apkDownloadBtn");
+    const statusNote = document.getElementById("statusNote");
+    const deClock = document.getElementById("deClock");
+
+    function refreshClock() {
+      try {
+        deClock.textContent = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Europe/Berlin",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date());
+      } catch (_) {}
+    }
+    refreshClock();
+    setInterval(refreshClock, 30000);
+
+    function resolveApkDownloadUrl() {
+      const host = location.hostname;
+      const parts = location.pathname.split("/").filter(Boolean);
+
+      // إذا كانت الصفحة مستضافة على GitHub Pages: https://<user>.github.io/<repo>/
+      if (host.endsWith(".github.io") && parts.length >= 1) {
+        const owner = host.split(".")[0];
+        const repo = parts[0];
+        const releaseUrl = `https://github.com/${owner}/${repo}/releases/latest/download/PES-VPN-Germany-v1.0.apk`;
+        apkBtn.href = releaseUrl;
+        statusNote.innerHTML =
+          `<strong>رابط التحميل متصل تلقائياً بإصدارات GitHub Releases:</strong> عند الضغط سيبدأ تنزيل <code>PES-VPN-Germany-v1.0.apk</code> مباشرة على هاتفك.`;
+        return;
+      }
+
+      // في أي استضافة أخرى: يبحث عن ملف PES-VPN-Germany-v1.0.apk في نفس المجلد
+      apkBtn.href = "PES-VPN-Germany-v1.0.apk";
+      if (location.protocol.startsWith("http")) {
+        fetch("PES-VPN-Germany-v1.0.apk", { method: "HEAD" })
+          .then(res => {
+            if (res.ok) {
+              statusNote.innerHTML =
+                `<strong>ملف APK جاهز للتحميل:</strong> اضغط على الزر الأخضر أعلاه لبدء التنزيل المباشر.`;
+            } else {
+              statusNote.innerHTML =
+                `<strong>ملاحظة:</strong> ضع ملف <code>PES-VPN-Germany-v1.0.apk</code> في نفس مجلد هذا الموقع أو فعّل GitHub Pages بعد الرفع ليعمل الزر تلقائياً.`;
+            }
+          })
+          .catch(() => {});
+      } else {
+        apkBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          statusNote.innerHTML =
+            `<strong>تنبيه:</strong> تم فتح الصفحة محلياً بدون خادم استضافة. لتفعيل زر التحميل مباشرة على أي هاتف، ارفع المشروع عبر <b>Push to GitHub</b> ثم فعّل <b>GitHub Pages</b> من إعدادات المستودع على مجلد <code>/docs</code>.`;
+        });
+        statusNote.innerHTML =
+          `<strong>جاهز للنشر:</strong> ارفع المشروع إلى GitHub وفعّل <b>Pages ← /docs</b> ليتم ربط زر التنزيل تلقائياً بأحدث ملف APK.`;
+      }
+    }
+
+    resolveApkDownloadUrl();
+  </script>
+</body>
+</html>
